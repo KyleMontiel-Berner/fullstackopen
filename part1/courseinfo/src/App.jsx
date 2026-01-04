@@ -26,18 +26,18 @@ function Header({course}) {
 function Content({part1, exercises1, part2, exercises2, part3, exercises3}) {
   return (
     <div>
-      <p>
-        {part1} {exercises1}
-      </p>
-      <p>
-        {part2} {exercises2}
-      </p>
-      <p>
-        {part3} {exercises3}
-      </p>
+        <Part part={part1} exercise={exercises1} />
+        <Part part={part2} exercise={exercises2} />
+        <Part part={part3} exercise={exercises3} />
     </div>
   )
 };
+
+function Part({part, exercise}) {
+  return (
+    <p>{part} {exercise}</p>
+  )
+}
 
 function Total({exercises1, exercises2, exercises3}) {
   return (
