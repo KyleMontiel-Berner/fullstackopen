@@ -1,4 +1,7 @@
 import { useState } from "react";
+import Filter from "./components/Filter";
+import PersonForm from "./components/PersonForm";
+import Persons from "./components/Persons";
 
 const App = () => {
   const [persons, setPersonList] = useState([
@@ -7,7 +10,6 @@ const App = () => {
   const [newNumber, setNewNumber] = useState("");
   const [newName, setNewName] = useState("");
   const [search, setSearch] = useState("");
-  const [showList, setShowList] = useState(persons);
 
   const handleInputChange = (event) => {
     setNewName(event.target.value);
@@ -18,17 +20,7 @@ const App = () => {
   };
 
   const handleSearchChange = (event) => {
-    if (event.target.value === "") {
-      setShowList(persons);
-    } else {
-      const searchTerm = event.target.value;
-      setShowList(
-        showList.filter((person) =>
-          person.name.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      );
-      setSearch(searchTerm);
-    }
+    setSearch(event.target.value);
   };
 
   const handleSubmit = (e) => {
@@ -42,45 +34,42 @@ const App = () => {
         number: newNumber,
       };
       setPersonList(persons.concat(personObject));
-      setShowList(persons.concat(personObject));
       setNewName("");
       setNewNumber("");
     }
   };
 
+  const filteredList =
+    search === ""
+      ? persons
+      : persons.filter((person) =>
+          person.name.toLowerCase().includes(search.toLowerCase())
+        );
+
   return (
     <div>
       <h2>Phonebook</h2>
-      <label htmlFor="filter">filter shown with</label>
-      <input id="filter" type="text" onChange={handleSearchChange} />
+      <Filter
+        id="filter"
+        type="text"
+        onChange={handleSearchChange}
+        value={search}
+      />
 
       <h2>add a new</h2>
-      <form onSubmit={handleSubmit}>
-        <label htmlFor="name">Name:</label>
-        <input
-          id="name"
-          type="text"
-          value={newName}
-          onChange={handleInputChange}
-        />
-        <label htmlFor="number">Number:</label>
-        <input
-          id="number"
-          type="text"
-          value={newNumber}
-          onChange={handleNumChange}
-        />
-        <button type="submit">add</button>
-      </form>
+
+      <PersonForm
+        onSubmit={handleSubmit}
+        handleInputChange={handleInputChange}
+        handleNumChange={handleNumChange}
+        newNumber={newNumber}
+        newName={newName}
+      />
+
       <h2>Numbers</h2>
-      <div>
-        {showList.map((person) => (
-          <h3 key={person.id}>
-            {person.name} {person.number}
-          </h3>
-        ))}
-      </div>
+      <Persons list={filteredList} />
     </div>
   );
 };
+
 export default App;
