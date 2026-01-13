@@ -1,9 +1,14 @@
-const Persons = ({ list }) => (
+const Persons = ({ list, onRemove }) => (
   <div>
     {list.map((person) => (
-      <h3 key={person.id}>
-        {person.name} {person.number}
-      </h3>
+      <div key={person.id}>
+        <h3>
+          {person.name} {person.number}
+        </h3>
+        <button type="button" onClick={() => onRemove(person)}>
+          Delete
+        </button>
+      </div>
     ))}
   </div>
 );

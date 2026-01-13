@@ -1,15 +1,30 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Filter from "./components/Filter";
 import PersonForm from "./components/PersonForm";
 import Persons from "./components/Persons";
+import listService from "./services/List";
 
 const App = () => {
-  const [persons, setPersonList] = useState([
-    { name: "Arto Hellas", id: 1, number: "040-1234567" },
-  ]);
+  const [persons, setPersonList] = useState([]);
   const [newNumber, setNewNumber] = useState("");
   const [newName, setNewName] = useState("");
   const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    listService.grab().then((initialList) => {
+      console.log(initialList);
+      setPersonList(initialList);
+    });
+  }, []);
+
+  const handleRemoval = (person) => {
+    const listAfterDeletedItem = persons.filter(
+      (item) => person.id !== item.id
+    );
+    listService
+      .remove(person.id)
+      .then(() => setPersonList(listAfterDeletedItem));
+  };
 
   const handleInputChange = (event) => {
     setNewName(event.target.value);
@@ -30,12 +45,13 @@ const App = () => {
     } else {
       const personObject = {
         name: newName,
-        id: persons.length + 1,
         number: newNumber,
       };
-      setPersonList(persons.concat(personObject));
-      setNewName("");
-      setNewNumber("");
+      listService.create(personObject).then((person) => {
+        setPersonList(persons.concat(person));
+        setNewName("");
+        setNewNumber("");
+      });
     }
   };
 
@@ -67,7 +83,7 @@ const App = () => {
       />
 
       <h2>Numbers</h2>
-      <Persons list={filteredList} />
+      <Persons list={filteredList} onRemove={handleRemoval} />
     </div>
   );
 };
