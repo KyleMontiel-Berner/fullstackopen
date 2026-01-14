@@ -2,13 +2,17 @@ import { useState, useEffect } from "react";
 import Filter from "./components/Filter";
 import PersonForm from "./components/PersonForm";
 import Persons from "./components/Persons";
+import Notification from "./components/Notification";
 import listService from "./services/List";
+import Error from "./components/Error";
 
 const App = () => {
   const [persons, setPersonList] = useState([]);
   const [newNumber, setNewNumber] = useState("");
   const [newName, setNewName] = useState("");
   const [search, setSearch] = useState("");
+  const [message, setMessage] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null);
 
   useEffect(() => {
     listService.grab().then((initialList) => {
@@ -55,11 +59,24 @@ const App = () => {
           name: newName,
           number: newNumber,
         };
-        listService.update(targetPerson.id, newObject).then((updatedPerson) => {
-          setPersonList(copyPersonList.concat(updatedPerson));
-          setNewName("");
-          setNewNumber("");
-        });
+
+        listService
+          .update(targetPerson.id, newObject)
+          .then((updatedPerson) => {
+            setPersonList(copyPersonList.concat(updatedPerson));
+            setNewName("");
+            setNewNumber("");
+            setTimeout(() => {
+              setMessage(null);
+            }, 5000);
+            setMessage(`${newName}'s new number has been saved`);
+          })
+          .catch((error) => {
+            setErrorMsg(`${newName} has already been removed from server`);
+            setTimeout(() => {
+              setErrorMsg(null);
+            }, 5000);
+          });
       }
     } else {
       const personObject = {
@@ -70,6 +87,10 @@ const App = () => {
         setPersonList(persons.concat(person));
         setNewName("");
         setNewNumber("");
+        setTimeout(() => {
+          setMessage(null);
+        }, 5000);
+        setMessage(`${newName} has been added to the phonebook`);
       });
     }
   };
@@ -83,7 +104,9 @@ const App = () => {
 
   return (
     <div>
-      <h2>Phonebook</h2>
+      <Notification message={message} />
+      <Error message={errorMsg} />
+      <h1>Phonebook</h1>
       <Filter
         id="filter"
         type="text"
@@ -91,7 +114,7 @@ const App = () => {
         value={search}
       />
 
-      <h2>add a new</h2>
+      <h1>add a new</h1>
 
       <PersonForm
         onSubmit={handleSubmit}
@@ -101,7 +124,7 @@ const App = () => {
         newName={newName}
       />
 
-      <h2>Numbers</h2>
+      <h1>Numbers</h1>
       <Persons list={filteredList} onRemove={handleRemoval} />
     </div>
   );

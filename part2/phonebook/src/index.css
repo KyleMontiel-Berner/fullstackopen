@@ -1,0 +1,23 @@
+h1 {
+    color: green;
+    font-style: italic;
+}
+
+ .success {
+    color: green;
+    border: 3px solid green;
+    background: grey;
+    font-size: 20px;
+    border-radius: 5px;
+    padding: 10px;
+  }
+
+.error {
+    color: red;
+    border: 3px solid red;
+    margin-top: 5px;
+    background: grey;
+    font-size: 20px;
+    border-radius: 5px;
+    padding: 10px;
+}
