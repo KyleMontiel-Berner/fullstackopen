@@ -18,12 +18,14 @@ const App = () => {
   }, []);
 
   const handleRemoval = (person) => {
-    const listAfterDeletedItem = persons.filter(
-      (item) => person.id !== item.id
-    );
-    listService
-      .remove(person.id)
-      .then(() => setPersonList(listAfterDeletedItem));
+    if (window.confirm(`Delete ${person.name} ?`)) {
+      const listAfterDeletedItem = persons.filter(
+        (item) => person.id !== item.id
+      );
+      listService
+        .remove(person.id)
+        .then(() => setPersonList(listAfterDeletedItem));
+    }
   };
 
   const handleInputChange = (event) => {
@@ -41,7 +43,24 @@ const App = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (persons.some((person) => person.name === newName)) {
-      alert(`${newName} is already added to the phonebook`);
+      if (
+        window.confirm(`${newName} is already added to the phonebook,
+      replace the old number with a new one?`)
+      ) {
+        const targetPerson = persons.find((person) => person.name === newName);
+        const copyPersonList = persons.filter(
+          (person) => person.name !== newName
+        );
+        const newObject = {
+          name: newName,
+          number: newNumber,
+        };
+        listService.update(targetPerson.id, newObject).then((updatedPerson) => {
+          setPersonList(copyPersonList.concat(updatedPerson));
+          setNewName("");
+          setNewNumber("");
+        });
+      }
     } else {
       const personObject = {
         name: newName,
