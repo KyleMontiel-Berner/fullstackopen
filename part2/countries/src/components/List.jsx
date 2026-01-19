@@ -1,25 +1,20 @@
+import Button from "./Button";
+import Information from "./Information";
+
 const List = ({ value }) => {
+  console.log("List received:", value);
+  console.log("value.length", value.length);
+
   if (value.length === 1) {
-    const country = value[0];
-    return (
-      <div>
-        <h1>{country.name}</h1>
-        <h3>Capital: {country.capital}</h3>
-        <h3>Area: {country.area}</h3>
-        <h1>Languages</h1>
-        <ul>
-          {Object.entries(country.languages).map(([code, language]) => (
-            <li key={code}>{language}</li>
-          ))}
-        </ul>
-        <span className="flag">{country.flag}</span>
-      </div>
-    );
+    return <Information country={value[0]} />;
   } else if (value.length !== 1 && value.length <= 10) {
     return (
       <ul>
         {value.map((country) => (
-          <li key={country.key}>{country.name}</li>
+          <div key={country.key}>
+            <li>{country.name}</li>
+            <Button country={country} />
+          </div>
         ))}
       </ul>
     );

@@ -1,4 +1,17 @@
+import axios from "axios";
+
+const baseUrl = "https://studies.cs.helsinki.fi/restcountries/api/all";
+
+const getAll = () => {
+  return axios.get(baseUrl).then((response) => response.data);
+};
+
+export default getAll;
+
+/* 
 import axios from 'axios'
+
+    const listActions = () => {
 
     const baseUrl = "https://studies.cs.helsinki.fi/restcountries/api/all"
 
@@ -6,5 +19,9 @@ import axios from 'axios'
         return axios.get(baseUrl).then(response =>
             response.data)
         }
+    return {getAll}
+}
 
-export default getAll
+export default listActions
+
+*/
