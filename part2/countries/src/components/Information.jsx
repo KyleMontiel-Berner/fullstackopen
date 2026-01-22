@@ -6,15 +6,22 @@ const weather_key = import.meta.env.VITE_WEATHER_API_KEY;
 const Information = ({ country }) => {
   console.log("info received country", country);
   console.log("API Key:", weather_key);
+  
   const [capitalWeather, setCapitalWeather] = useState(null);
+  const [celsius, setCelsius] = useState(0);
 
   useEffect(() => {
     axios
       .get(
         `https://api.openweathermap.org/data/2.5/weather?q=${country.capital[0]}&appid=${weather_key}`,
       )
-      .then((response) => setCapitalWeather(response.data));
-  }, [country]);
+      .then((response) => {
+        console.log("final object", capitalWeather);
+        setCapitalWeather(response.data);
+});
+}, [country]);
+
+
 
   return (
     <div>
@@ -30,10 +37,10 @@ const Information = ({ country }) => {
       <span className="flag">{country.flag}</span>
       {capitalWeather && (
         <div>
-          <h1>Weather in ${capitalWeather.capital}</h1>
-          <h3>Temperature ${capitalWeather.main.temp}</h3>
-          <span></span>
-          <h3>Wind ${capitalWeather.wind.speed}</h3>
+          <h1>Weather in {capitalWeather.name}</h1>
+          <h3>Temperature: {(capitalWeather.main.temp - 273.15).toFixed(2)} Celsius</h3>
+          <img src={`https://openweathermap.org/img/wn/${capitalWeather.weather[0].icon}@2x.png`} />
+          <h3>Wind: {capitalWeather.wind.speed} m/s</h3>
         </div>
       )}
     </div>
