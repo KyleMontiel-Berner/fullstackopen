@@ -9,15 +9,6 @@ morgan.token("userContent", (request) => {
   return JSON.stringify(request.body);
 });
 
-const errorHandler = (error, request, response, next) => {
-  console.error(error.message);
-
-  if (error.name === "CastError") {
-    return response.status(400).send({ error: "inappropriate id format" });
-  }
-  next(error);
-};
-
 app.use(express.static("dist"));
 app.use(express.json());
 app.use(
@@ -26,20 +17,24 @@ app.use(
   ),
 );
 
-app.get("/api/persons", (request, response) => {
-  Contact.find({}).then((contacts) => {
-    response.json(contacts);
-  });
+app.get("/api/persons", (request, response, next) => {
+  Contact.find({})
+    .then((contacts) => {
+      response.json(contacts);
+    })
+    .catch((error) => next(error));
 });
 
-app.get("/info", (request, response) => {
-  Contact.find({}).then((contacts) =>
-    response.send(`<p>Phonebook has info for ${contacts.length} people</p>
+app.get("/info", (request, response, next) => {
+  Contact.find({})
+    .then((contacts) =>
+      response.send(`<p>Phonebook has info for ${contacts.length} people</p>
       <p>${new Date()}</p>`),
-  );
+    )
+    .catch((error) => next(error));
 });
 
-app.get("/api/persons/:id", (request, response) => {
+app.get("/api/persons/:id", (request, response, next) => {
   Contact.findById(request.params.id)
     .then((note) => {
       if (note) {
@@ -51,7 +46,7 @@ app.get("/api/persons/:id", (request, response) => {
     .catch((error) => next(error));
 });
 
-app.delete("/api/persons/:id", (request, response) => {
+app.delete("/api/persons/:id", (request, response, next) => {
   Contact.findByIdAndDelete(request.params.id)
     .then(() => {
       response.status(204).end();
@@ -59,7 +54,7 @@ app.delete("/api/persons/:id", (request, response) => {
     .catch((error) => next(error));
 });
 
-app.post("/api/persons", (request, response) => {
+app.post("/api/persons", (request, response, next) => {
   const body = request.body;
 
   if (!body.name || !body.number) {
@@ -72,13 +67,16 @@ app.post("/api/persons", (request, response) => {
       number: body.number,
     });
 
-    contact.save().then((savedContact) => {
-      response.json(savedContact);
-    });
+    contact
+      .save()
+      .then((savedContact) => {
+        response.json(savedContact);
+      })
+      .catch((error) => next(error));
   }
 });
 
-app.put("/api/persons/:id", (request, response) => {
+app.put("/api/persons/:id", (request, response, next) => {
   const { name, number } = request.body;
 
   const newContact = {
@@ -90,6 +88,19 @@ app.put("/api/persons/:id", (request, response) => {
     .then((contact) => response.json(contact))
     .catch((error) => next(error));
 });
+
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message);
+
+  if (error.name === "CastError") {
+    return response.status(400).send({ error: "inappropriate id format" });
+  } else if (error.name === "ValidationError") {
+    return response.status(400).json({ error: error.message });
+  }
+  next(error);
+};
+
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
