@@ -121,3 +121,40 @@ test("doesnt post without title property", async () => {
   const blogList = await helper.blogsToJSON();
   assert.strictEqual(blogList.length, initialList.length);
 });
+
+test("delete a single blog", async () => {
+  const initialBlogList = await helper.blogsToJSON();
+  const deletedBlog = initialBlogList[0];
+
+  await api.delete(`/api/blogs/${deletedBlog.id}`).expect(204);
+
+  const finalBlogList = await helper.blogsToJSON();
+  const ids = finalBlogList.map((blog) => blog.id);
+  assert(!ids.includes(deletedBlog.id));
+
+  assert.strictEqual(finalBlogList.length, initialBlogList.length - 1);
+});
+
+test("update a single blog", async () => {
+  const initialBlogList = await helper.blogsToJSON();
+  const blogToUpdate = initialBlogList[0];
+
+  const newBlog = {
+    title: "changes here",
+    author: "author change here",
+    url: "https://homepages.cwi.nl/~storm/teaching/reader/Dijkstra68.pdf",
+    likes: 8,
+  };
+
+  await api
+    .put(`/api/blogs/${blogToUpdate.id}`)
+    .send(newBlog)
+    .expect(200)
+    .expect("Content-Type", /application\/json/);
+
+  const finalBlogList = await helper.blogsToJSON();
+
+  assert.strictEqual(finalBlogList.length, initialBlogList.length);
+  const titleCheck = finalBlogList.map((blog) => blog.title);
+  assert(titleCheck.includes("changes here"));
+});
