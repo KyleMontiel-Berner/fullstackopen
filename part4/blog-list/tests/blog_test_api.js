@@ -46,18 +46,13 @@ beforeEach(() => {
 
 beforeEach(async () => {
   await Blog.deleteMany({});
-
-  let blogPost = new Blog(initialList[0]);
-  await blogPost.save();
-
-  blogPost = new Blog(initialList[0]);
-  await blogPost.save();
+  await Blog.insertMany(initialList);
 });
 
 test("all blog posts are returned", async () => {
   const response = await api.get("/api/blogs");
 
-  assert.strictEqual(response.body.length, 2);
+  assert.strictEqual(response.body.length, 3);
 });
 
 test("unique identifier is id", async () => {
@@ -70,4 +65,29 @@ test("unique identifier is id", async () => {
     .expect("Content-Type", /application\/json/);
 
   assert.deepStrictEqual(blogResult.body, blogIdentified);
+});
+
+test("post one blog to the list", async () => {
+  const testBlog = {
+    title: "Testing Post and hopefully this is green",
+    author: "Berner's Blogs",
+    url: "https://google.com",
+    likes: 7,
+  };
+
+  const result = await api
+    .post("/api/blogs")
+    .send(testBlog)
+    .expect(201)
+    .expect("Content-Type", /application\/json/);
+
+  const newBlogList = await helper.blogsToJSON();
+
+  assert.strictEqual(newBlogList.length, initialList.length + 1);
+
+  const content = newBlogList.find(
+    (blog) => blog.title === "Testing Post and hopefully this is green",
+  );
+
+  assert(content);
 });
