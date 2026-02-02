@@ -75,7 +75,7 @@ test("post one blog to the list", async () => {
     likes: 7,
   };
 
-  const result = await api
+  await api
     .post("/api/blogs")
     .send(testBlog)
     .expect(201)
@@ -90,4 +90,34 @@ test("post one blog to the list", async () => {
   );
 
   assert(content);
+});
+
+test("post defaults to 0 likes", async () => {
+  const testBlog = {
+    title: "Testing Post with 0 likes",
+    author: "Berner's Blogs",
+    url: "https://www.google.com",
+  };
+
+  const result = await api
+    .post("/api/blogs")
+    .send(testBlog)
+    .expect(201)
+    .expect("Content-Type", /application\/json/);
+
+  assert.strictEqual(result.body.likes, 0);
+});
+
+test("doesnt post without title property", async () => {
+  const testBlog = {
+    author: "Berner's Blogs",
+    url: "https://www.google.com",
+  };
+
+  const result = await api.post("/api/blogs").send(testBlog);
+
+  assert.strictEqual(result.status, 400);
+
+  const blogList = await helper.blogsToJSON();
+  assert.strictEqual(blogList.length, initialList.length);
 });
