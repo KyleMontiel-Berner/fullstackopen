@@ -16,7 +16,9 @@ userRouter.post("/", async (request, response) => {
   const { username, password, name } = request.body;
 
   if (!(username && password)) {
-    response.status(400).json({ error: "invalid username and password input" });
+    return response
+      .status(400)
+      .json({ error: "invalid username and password input" });
   }
 
   const saltRounds = 10;

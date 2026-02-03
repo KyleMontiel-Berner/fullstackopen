@@ -1,6 +1,15 @@
 const blogRouter = require("express").Router();
 const Blog = require("../domain-model/blog");
 const User = require("../domain-model/user");
+const jwt = require("jsonwebtoken");
+
+const getToken = (request) => {
+  const authorization = request.get("authorization");
+  if (authorization && authorization.startsWith("Bearer ")) {
+    return authorization.replace("Bearer ", "");
+  }
+  return null;
+};
 
 blogRouter.get("/", async (request, response) => {
   const blogs = await Blog.find({}).populate("user", {
@@ -16,7 +25,7 @@ blogRouter.get("/:id", async (request, response) => {
   if (blog) {
     response.json(blog);
   } else {
-    response.status(400).end;
+    return response.status(400).end;
   }
 });
 
@@ -27,7 +36,17 @@ blogRouter.post("/", async (request, response) => {
     return response.status(400).json({ error: "title and url required" });
   }
 
-  const user = await User.findOne({});
+  const decodedToken = jwt.verify(getToken(request), process.env.SECRET);
+
+  if (!decodedToken) {
+    return response.status(401).json({ error: "invalid token" });
+  }
+
+  const user = await User.findById(decodedToken.id);
+
+  if (!user) {
+    return response.status(401).json({ error: "UserId invalid" });
+  }
 
   const blog = new Blog({
     title: body.title,
