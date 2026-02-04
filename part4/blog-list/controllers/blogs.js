@@ -33,7 +33,7 @@ blogRouter.post(
       return response.status(400).json({ error: "title and url required" });
     }
 
-    if (!req.user) {
+    if (!request.user) {
       return response.status(401).json({ error: "UserId invalid" });
     }
 
@@ -67,7 +67,7 @@ blogRouter.delete(
     const blog = await Blog.findById(request.params.id);
 
     if (!blog) {
-      response.status(404).json({ error: "blog doesnt exist" });
+      return response.status(404).json({ error: "blog doesnt exist" });
     }
 
     if (blog.user.toString() === request.user._id.toString()) {

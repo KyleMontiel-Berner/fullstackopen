@@ -7,10 +7,7 @@ const userSchema = new mongoose.Schema({
     unique: true,
     required: true,
   },
-  password: {
-    type: String,
-    minlength: 3,
-  },
+  passwordHash: String,
   name: String,
   blogs: [
     {
@@ -25,7 +22,7 @@ userSchema.set("toJSON", {
     returnedObject.id = returnedObject._id.toString();
     (delete returnedObject._id,
       delete returnedObject.__v,
-      delete returnedObject.password);
+      delete returnedObject.passwordHash);
   },
 });
 

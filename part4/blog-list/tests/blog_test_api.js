@@ -5,6 +5,8 @@ const supertest = require("supertest");
 const app = require("../app");
 const helper = require("../utils/list_helper");
 const Blog = require("../domain-model/blog");
+const User = require("../domain-model/user");
+const bcrypt = require("bcrypt");
 
 const api = supertest(app);
 
@@ -44,13 +46,44 @@ beforeEach(() => {
 });
 */
 
+// adding token to global scope so tests can access new value
+
+let token;
+
 beforeEach(async () => {
   await Blog.deleteMany({});
-  await Blog.insertMany(initialList);
+  await User.deleteMany({});
+
+  const passwordHash = await bcrypt.hash("testpwd", 10);
+
+  const user = new User({
+    username: "usernameTest",
+    name: "name Test",
+    passwordHash,
+  });
+
+  const savedUser = await user.save();
+
+  const loggingIn = await api.post("/api/login").send({
+    username: "usernameTest",
+    password: "testpwd",
+  });
+
+  token = loggingIn.body.token;
+
+  const blogs = initialList.map(
+    (blog) =>
+      new Blog({
+        ...blog,
+        user: savedUser._id,
+      }),
+  );
+
+  await Blog.insertMany(blogs);
 });
 
 test("all blog posts are returned", async () => {
-  const response = await api.get("/api/blogs");
+  const response = await api.get("/api/blogs/");
 
   assert.strictEqual(response.body.length, 3);
 });
@@ -77,6 +110,7 @@ test("post one blog to the list", async () => {
 
   await api
     .post("/api/blogs")
+    .set("Authorization", `Bearer ${token}`)
     .send(testBlog)
     .expect(201)
     .expect("Content-Type", /application\/json/);
@@ -101,11 +135,25 @@ test("post defaults to 0 likes", async () => {
 
   const result = await api
     .post("/api/blogs")
+    .set("Authorization", `Bearer ${token}`)
     .send(testBlog)
     .expect(201)
     .expect("Content-Type", /application\/json/);
 
   assert.strictEqual(result.body.likes, 0);
+});
+
+test("doesnt post without valid token", async () => {
+  const testBlog = {
+    title: "Testing Post with 0 likes",
+    author: "Berner's Blogs",
+    url: "https://www.google.com",
+  };
+
+  const result = await api.post("/api/blogs").send(testBlog).expect(401);
+
+  const finalBlogList = await helper.blogsToJSON();
+  assert.strictEqual(finalBlogList.length, initialList.length);
 });
 
 test("doesnt post without title property", async () => {
@@ -114,7 +162,10 @@ test("doesnt post without title property", async () => {
     url: "https://www.google.com",
   };
 
-  const result = await api.post("/api/blogs").send(testBlog);
+  const result = await api
+    .post("/api/blogs")
+    .set("Authorization", `Bearer ${token}`)
+    .send(testBlog);
 
   assert.strictEqual(result.status, 400);
 
@@ -126,7 +177,10 @@ test("delete a single blog", async () => {
   const initialBlogList = await helper.blogsToJSON();
   const deletedBlog = initialBlogList[0];
 
-  await api.delete(`/api/blogs/${deletedBlog.id}`).expect(204);
+  await api
+    .delete(`/api/blogs/${deletedBlog.id}`)
+    .set(`Authorization`, `Bearer ${token}`)
+    .expect(204);
 
   const finalBlogList = await helper.blogsToJSON();
   const ids = finalBlogList.map((blog) => blog.id);
@@ -157,4 +211,8 @@ test("update a single blog", async () => {
   assert.strictEqual(finalBlogList.length, initialBlogList.length);
   const titleCheck = finalBlogList.map((blog) => blog.title);
   assert(titleCheck.includes("changes here"));
+});
+
+after(async () => {
+  await mongoose.connection.close();
 });
