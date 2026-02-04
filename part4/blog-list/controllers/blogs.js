@@ -2,14 +2,7 @@ const blogRouter = require("express").Router();
 const Blog = require("../domain-model/blog");
 const User = require("../domain-model/user");
 const jwt = require("jsonwebtoken");
-
-const getToken = (request) => {
-  const authorization = request.get("authorization");
-  if (authorization && authorization.startsWith("Bearer ")) {
-    return authorization.replace("Bearer ", "");
-  }
-  return null;
-};
+const { tokenExtractor, userExtractor } = require("../utils/middleware");
 
 blogRouter.get("/", async (request, response) => {
   const blogs = await Blog.find({}).populate("user", {
@@ -29,45 +22,64 @@ blogRouter.get("/:id", async (request, response) => {
   }
 });
 
-blogRouter.post("/", async (request, response) => {
-  const body = request.body;
+blogRouter.post(
+  "/",
+  tokenExtractor,
+  userExtractor,
+  async (request, response) => {
+    const body = request.body;
 
-  if (!body.title || !body.url) {
-    return response.status(400).json({ error: "title and url required" });
-  }
+    if (!body.title || !body.url) {
+      return response.status(400).json({ error: "title and url required" });
+    }
 
-  const decodedToken = jwt.verify(getToken(request), process.env.SECRET);
+    if (!req.user) {
+      return response.status(401).json({ error: "UserId invalid" });
+    }
 
-  if (!decodedToken) {
-    return response.status(401).json({ error: "invalid token" });
-  }
+    const user = request.user;
 
-  const user = await User.findById(decodedToken.id);
+    const blog = new Blog({
+      title: body.title,
+      author: body.author,
+      url: body.url,
+      likes: body.likes || 0,
+      user: user._id,
+    });
 
-  if (!user) {
-    return response.status(401).json({ error: "UserId invalid" });
-  }
+    const savedBlog = await blog.save();
+    user.blogs = user.blogs.concat(savedBlog._id);
+    await user.save();
 
-  const blog = new Blog({
-    title: body.title,
-    author: body.author,
-    url: body.url,
-    likes: body.likes || 0,
-    user: user._id,
-  });
+    response.status(201).json(savedBlog);
+  },
+);
 
-  const savedBlog = await blog.save();
-  user.blogs = user.blogs.concat(savedBlog._id);
-  await user.save();
+blogRouter.delete(
+  "/:id",
+  tokenExtractor,
+  userExtractor,
+  async (request, response) => {
+    if (!request.user) {
+      return response.status(401).json({ error: "UserId invalid" });
+    }
 
-  response.status(201).json(savedBlog);
-});
+    const blog = await Blog.findById(request.params.id);
 
-blogRouter.delete("/:id", async (request, response) => {
-  await Blog.findByIdAndDelete(request.params.id);
+    if (!blog) {
+      response.status(404).json({ error: "blog doesnt exist" });
+    }
 
-  response.status(204).end();
-});
+    if (blog.user.toString() === request.user._id.toString()) {
+      await Blog.findByIdAndDelete(request.params.id);
+      response.status(204).end();
+    } else {
+      return response
+        .status(403)
+        .json({ error: "not authorized to delete blog" });
+    }
+  },
+);
 
 blogRouter.put("/:id", async (request, response) => {
   const body = request.body;
