@@ -79,6 +79,11 @@ const App = () => {
     );
   };
 
+  const deleteBlog = async (id) => {
+    await blogService.remove(id);
+    setBlogs(blogs.filter((blog) => blog.id !== id));
+  };
+
   const loginForm = () => (
     <div>
       <h2>Log in to application</h2>
@@ -127,9 +132,17 @@ const App = () => {
           </Togglable>
         </div>
       )}
-      {blogs.map((blog) => (
-        <Blog key={blog.id} blog={blog} updateBlog={updateBlog} />
-      ))}
+      {blogs
+        .sort((a, b) => b.likes - a.likes)
+        .map((blog) => (
+          <Blog
+            key={blog.id}
+            blog={blog}
+            user={user}
+            updateBlog={updateBlog}
+            deleteBlog={deleteBlog}
+          />
+        ))}
     </div>
   );
 };

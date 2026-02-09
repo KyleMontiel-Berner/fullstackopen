@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const Blog = ({ blog, updateBlog }) => {
+const Blog = ({ blog, user, updateBlog, deleteBlog }) => {
   const [viewDetails, setViewDetails] = useState(false);
 
   const increaseLikeCount = () => {
@@ -11,6 +11,11 @@ const Blog = ({ blog, updateBlog }) => {
     };
 
     updateBlog(blog.id, updatedBlog);
+  };
+
+  const removeBlog = () => {
+    if (window.confirm(`Remove blog ${blog.title} by ${blog.author}?`))
+      deleteBlog(blog.id);
   };
 
   const hideDetails = { display: viewDetails ? "none" : "" };
@@ -44,6 +49,9 @@ const Blog = ({ blog, updateBlog }) => {
           likes {blog.likes} <button onClick={increaseLikeCount}>like</button>
         </div>
         <div>user: {blog.user ? blog.user.name : "user unknown"}</div>
+        {user && user.username === blog.user.username && (
+          <button onClick={removeBlog}>remove</button>
+        )}
       </div>
     </div>
   );
