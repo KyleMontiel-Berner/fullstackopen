@@ -16,7 +16,11 @@ const App = () => {
   const blogFormRef = useRef();
 
   useEffect(() => {
-    blogService.getAll().then((blogs) => setBlogs(blogs));
+    blogService.getAll().then((blogs) => {
+      console.log("Blogs received in frontend:", blogs);
+      console.log("First blog user:", blogs[0]?.user);
+      setBlogs(blogs);
+    });
   }, []);
 
   useEffect(() => {
@@ -64,6 +68,15 @@ const App = () => {
         setErrorMsg(null);
       }, 5000);
     }
+  };
+
+  const updateBlog = async (id, updatedBlog) => {
+    const returnedBlog = await blogService.update(id, updatedBlog);
+    setBlogs(
+      blogs.map((blog) => {
+        return blog.id !== id ? blog : returnedBlog;
+      }),
+    );
   };
 
   const loginForm = () => (
@@ -115,7 +128,7 @@ const App = () => {
         </div>
       )}
       {blogs.map((blog) => (
-        <Blog key={blog.id} blog={blog} />
+        <Blog key={blog.id} blog={blog} updateBlog={updateBlog} />
       ))}
     </div>
   );
