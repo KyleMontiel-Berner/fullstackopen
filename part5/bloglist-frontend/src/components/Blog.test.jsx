@@ -51,3 +51,31 @@ test("renders url and likes", async () => {
   const likeCount = screen.getByText(/likes 5/);
   expect(likeCount).toBeVisible();
 });
+
+test("like count increases by two with two clicks", async () => {
+  const mockUpdateFunction = vi.fn();
+
+  const blog = {
+    title: "Here is a Blog Title",
+    author: "Myself",
+    url: "https://www.espn.com",
+    likes: 5,
+    user: {
+      username: "berner_kyle",
+      name: "Kyle Berner",
+    },
+  };
+
+  render(<Blog blog={blog} updateBlog={mockUpdateFunction} />);
+
+  const user = userEvent.setup();
+
+  const view = screen.getByText("view");
+  await user.click(view);
+
+  const likeCounter = screen.getByText("like");
+  await user.click(likeCounter);
+  await user.click(likeCounter);
+
+  expect(mockUpdateFunction).toHaveBeenCalledTimes(2);
+});
