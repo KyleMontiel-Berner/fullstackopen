@@ -1,6 +1,6 @@
 const blogRouter = require("express").Router();
 
-const Blog = require("../models/blog");
+const { Blog } = require("../models/index.js");
 
 const noteFinder = async (req, res, next) => {
   req.note = await Blog.findByPk(req.params.id);
@@ -20,7 +20,17 @@ blogRouter.post("/", async (req, res) => {
     const blog = await Blog.create({ ...req.body });
     res.json(blog);
   } catch (error) {
-    return res.status(400).json({ error });
+    next(error);
+  }
+});
+
+blogRouter.put("/:id", noteFinder, async (req, res) => {
+  try {
+    req.note.likes = req.body.likes;
+    req.note.save();
+    res.json(req.note);
+  } catch (error) {
+    next(error);
   }
 });
 
