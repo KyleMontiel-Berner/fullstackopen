@@ -1,50 +1,69 @@
 const blogRouter = require("express").Router();
+const jwt = require("jsonwebtoken");
+const { SECRET } = require("../util/config.js");
+const { Blog, User } = require("../models/index.js");
 
-const { Blog } = require("../models/index.js");
+const tokenExtractor = (req, res, next) => {
+  const authorization = req.get("authorization");
+  if (!(authorization && authorization.toLowerCase().startsWith("bearer "))) {
+    return res.status(401).end();
+  } else {
+    req.decodedToken = jwt.verify(authorization.substring(7), SECRET);
+    next();
+  }
+};
 
-const noteFinder = async (req, res, next) => {
-  req.note = await Blog.findByPk(req.params.id);
-  if (!req.note) {
-    res.status(404).end();
+const blogFinder = async (req, res, next) => {
+  req.blog = await Blog.findByPk(req.params.id);
+  if (!req.blog) {
+    return res.status(404).end();
   }
   next();
 };
 
 blogRouter.get("/", async (req, res) => {
-  const blogs = await Blog.findAll();
+  const blogs = await Blog.findAll({
+    include: {
+      model: User,
+      attributes: ["username", "name"],
+    },
+  });
   res.json(blogs);
 });
 
-blogRouter.post("/", async (req, res) => {
+blogRouter.post("/", tokenExtractor, async (req, res, next) => {
   try {
-    const blog = await Blog.create({ ...req.body });
+    const user = await User.findByPk(req.decodedToken.id);
+    const blog = await Blog.create({ ...req.body, userId: user.id });
     res.json(blog);
   } catch (error) {
     next(error);
   }
 });
 
-blogRouter.put("/:id", noteFinder, async (req, res) => {
+blogRouter.put("/:id", blogFinder, async (req, res, next) => {
   try {
-    req.note.likes = req.body.likes;
-    req.note.save();
-    res.json(req.note);
+    req.blog.likes = req.body.likes;
+    await req.blog.save();
+    res.json(req.blog);
   } catch (error) {
     next(error);
   }
 });
 
-blogRouter.delete("/:id", noteFinder, async (req, res) => {
-  if (req.note) {
-    await req.note.destroy();
+blogRouter.delete("/:id", tokenExtractor, async (req, res) => {
+  req.blog = await Blog.findByPk(req.params.id);
+  const user = await User.findByPk(req.decodedToken.id);
+  if (req.blog && req.blog.userId === user.id) {
+    await req.blog.destroy();
     res.status(204).end();
   } else {
-    res.status(404).end();
+    res.status(401).end();
   }
 });
 
-blogRouter.get("/:id", noteFinder, async (req, res) => {
-  res.json(req.note);
+blogRouter.get("/:id", blogFinder, async (req, res) => {
+  res.json(req.blog);
 });
 
 module.exports = blogRouter;

@@ -1,15 +1,26 @@
 const router = require("express").Router();
-const { User } = require("../models/index.js");
+const { User, Blog } = require("../models/index.js");
 
 router.get("/", async (req, res) => {
-  const users = await User.findAll();
+  const users = await User.findAll({
+    include: {
+      model: Blog,
+      attributes: ["id", "title", "author", "url", "likes"],
+    },
+  });
   res.json(users);
 });
 
 router.post("/", async (req, res) => {
-  const user = await User.create({ ...req.body });
-  user.save();
-  res.json(user);
+  try {
+    const user = await User.create({ ...req.body });
+    user.save();
+    res.json(user);
+  } catch (error) {
+    res.status(400).json({
+      error: "username must be a valid email address",
+    });
+  }
 });
 
 router.put("/:username", async (req, res) => {

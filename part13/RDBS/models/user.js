@@ -12,6 +12,7 @@ User.init(
     },
     username: {
       type: DataTypes.STRING,
+      isEmail: true,
       allowNull: false,
     },
     name: {
@@ -21,7 +22,7 @@ User.init(
   },
   {
     sequelize,
-    autoIncrement: true,
+    underscored: true,
     timestamps: true,
     modelName: "user",
   },
