@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const { SECRET } = require("../util/config.js");
 const { Blog, User } = require("../models/index.js");
 const { Op } = require("sequelize");
+const { sequelize } = require("../util/db.js");
 
 const tokenExtractor = (req, res, next) => {
   const authorization = req.get("authorization");
@@ -38,8 +39,10 @@ blogRouter.get("/", async (req, res) => {
       attributes: ["username", "name"],
     },
     where,
+    order: [["likes", "DESC"]],
   });
   res.json(blogs);
+  res.status(200).end();
 });
 
 blogRouter.post("/", tokenExtractor, async (req, res, next) => {
