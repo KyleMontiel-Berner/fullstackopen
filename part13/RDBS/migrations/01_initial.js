@@ -52,6 +52,15 @@ module.exports = {
       updated_at: {
         type: DataTypes.DATE,
       },
+      user_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: { model: "users", key: "id" },
+      },
     });
+  },
+  down: async ({ context: queryInterface }) => {
+    await queryInterface.dropTable("blogs");
+    await queryInterface.dropTable("users");
   },
 };

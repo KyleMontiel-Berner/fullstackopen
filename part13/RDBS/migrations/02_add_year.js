@@ -11,6 +11,6 @@ module.exports = {
     });
   },
   down: async ({ context: queryInterface }) => {
-    await queryInterface.removeColumn("users", "year");
+    await queryInterface.removeColumn("blogs", "year");
   },
 };
