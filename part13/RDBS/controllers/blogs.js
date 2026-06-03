@@ -4,16 +4,7 @@ const { SECRET } = require("../util/config.js");
 const { Blog, User } = require("../models/index.js");
 const { Op } = require("sequelize");
 const { sequelize } = require("../util/db.js");
-
-const tokenExtractor = (req, res, next) => {
-  const authorization = req.get("authorization");
-  if (!(authorization && authorization.toLowerCase().startsWith("bearer "))) {
-    return res.status(401).end();
-  } else {
-    req.decodedToken = jwt.verify(authorization.substring(7), SECRET);
-    next();
-  }
-};
+const { tokenExtractor } = require("../util/middleware.js");
 
 const blogFinder = async (req, res, next) => {
   req.blog = await Blog.findByPk(req.params.id);
