@@ -30,7 +30,7 @@ router.put("/:id", tokenExtractor, async (req, res) => {
     const user = await User.findByPk(req.decodedToken.id);
     const readList = await ReadingList.findByPk(req.params.id);
 
-    if (readList.id !== user.id) {
+    if (readList.userId !== user.id) {
       return res.status(401).json({ error: "not authorized" });
     }
 

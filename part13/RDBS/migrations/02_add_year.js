@@ -6,7 +6,7 @@ module.exports = {
       type: DataTypes.INTEGER,
       validate: {
         min: 1991,
-        max: new Date().getFullYear,
+        max: new Date().getFullYear(),
       },
     });
   },
