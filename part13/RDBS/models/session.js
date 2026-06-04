@@ -13,7 +13,7 @@ Session.init(
       type: DataTypes.TEXT,
       allowNull: false,
     },
-    user_id: {
+    userId: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: { model: "users", key: "id" },

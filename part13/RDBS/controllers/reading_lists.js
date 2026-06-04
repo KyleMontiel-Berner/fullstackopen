@@ -4,19 +4,36 @@ const { tokenExtractor } = require("../util/middleware");
 
 router.post("/", async (req, res) => {
   try {
-    const user = await User.findByPk(req.body.userId);
-    const blog = await Blog.findByPk(req.body.blogId);
+    const { userId, blogId } = req.body;
 
-    if (!(user && blog)) {
-      res.status(400).json({ error: "user or blog not found" });
+    if (!userId || !blogId) {
+      return res.status(400).json({ error: "userId and blogId are required" });
     }
-    const readList = await ReadingList.create({
-      userId: req.body.userId,
-      blogId: req.body.blogId,
+
+    const user = await User.findByPk(userId);
+    const blog = await Blog.findByPk(blogId);
+
+    if (!user) {
+      return res.status(404).json({ error: "user not found" });
+    }
+    if (!blog) {
+      return res.status(404).json({ error: "blog not found" });
+    }
+
+    const existing = await ReadingList.findOne({ where: { userId, blogId } });
+    if (existing) {
+      return res.status(400).json({ error: "already in reading list" });
+    }
+
+    const readList = await ReadingList.create({ userId, blogId });
+    res.json({
+      id: readList.id,
+      user_id: readList.userId,
+      blog_id: readList.blogId,
+      read: readList.read,
     });
-    res.json(readList);
   } catch (error) {
-    res.status(400).json({ error });
+    res.status(400).json({ error: error.message });
   }
 });
 
@@ -29,6 +46,10 @@ router.put("/:id", tokenExtractor, async (req, res) => {
   try {
     const user = await User.findByPk(req.decodedToken.id);
     const readList = await ReadingList.findByPk(req.params.id);
+
+    if (!readList) {
+      return res.status(404).json({ error: "reading list entry not found" });
+    }
 
     if (readList.userId !== user.id) {
       return res.status(401).json({ error: "not authorized" });

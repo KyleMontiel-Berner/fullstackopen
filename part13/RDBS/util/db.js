@@ -1,15 +1,19 @@
-const { DATABASE_URL } = require("./config");
+const { DATABASE_URL, TEST_DATABASE_URL } = require("./config");
 const { Sequelize } = require("sequelize");
 const { Umzug, SequelizeStorage } = require("umzug");
 
-const sequelize = new Sequelize(process.env.DATABASE_URL, {
-  dialectOptions: {
-    ssl: {
-      require: true,
-      rejectUnauthorized: false,
+console.log(DATABASE_URL, TEST_DATABASE_URL);
+const sequelize = new Sequelize(
+  process.env.TESTING ? TEST_DATABASE_URL : DATABASE_URL,
+  {
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false,
+      },
     },
   },
-});
+);
 
 const migrationConf = {
   migrations: { glob: "migrations/*.js" },

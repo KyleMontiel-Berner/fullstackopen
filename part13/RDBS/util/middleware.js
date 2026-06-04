@@ -14,7 +14,11 @@ const tokenExtractor = async (req, res, next) => {
   } else {
     const token = authorization.substring(7);
     req.token = token;
-    req.decodedToken = jwt.verify(token, SECRET);
+    try {
+      req.decodedToken = jwt.verify(token, SECRET);
+    } catch {
+      return res.status(401).json({ error: "invalid token" });
+    }
     const session = await Session.findOne({
       where: { token },
     });

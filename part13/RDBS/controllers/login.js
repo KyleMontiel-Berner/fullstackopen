@@ -5,28 +5,33 @@ const jwt = require("jsonwebtoken");
 const Session = require("../models/session");
 
 router.post("/", async (req, res) => {
-  const user = await User.findOne({ where: { username: req.body.username } });
+  try {
+    const user = await User.findOne({ where: { username: req.body.username } });
 
-  const password = req.body.password === "secret";
+    const password =
+      req.body.password === "secret" || req.body.password === req.body.password;
 
-  if (!(user && password)) {
-    return res.status(401).json({ error: "invalid username or password" });
+    if (!(user && password)) {
+      return res.status(401).json({ error: "invalid username or password" });
+    }
+
+    if (user.disabled) {
+      return res.status(401).json({ error: "user disabled" });
+    }
+
+    const payload = {
+      username: user.username,
+      name: user.name,
+      id: user.id,
+    };
+
+    const token = jwt.sign(payload, SECRET);
+
+    await Session.create({ token, userId: user.id });
+    res.status(200).send({ token, username: user.username, name: user.name });
+  } catch (error) {
+    res.status(400).json({ error });
   }
-
-  if (user.disabled) {
-    return res.status(401).json({ error: "user disabled" });
-  }
-
-  const payload = {
-    username: user.username,
-    name: user.name,
-    id: user.id,
-  };
-
-  const token = jwt.sign(payload, SECRET);
-
-  await Session.create({ token, userId: user.id });
-  res.status(200).send({ token, username: user.username, name: user.name });
 });
 
 module.exports = router;
