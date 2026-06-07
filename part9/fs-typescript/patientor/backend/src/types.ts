@@ -1,4 +1,4 @@
-export interface patientInfo {
+export interface PatientInfo {
     id: string,
     name: string,
     dateOfBirth: string,
@@ -7,10 +7,19 @@ export interface patientInfo {
     occupation: string
 }
 
-export interface diagnosesInfo {
+export interface DiagnosesInfo {
     code: string,
     name: string,
     latin?: string
 }
 
-export type safePatientData = Omit<patientInfo, 'ssn'>;
+export const Gender = {
+    male: 'male',
+    female: 'female',
+    other: 'other'
+} as const;
+
+export type Gender = typeof Gender[keyof typeof Gender];
+
+export type SafePatientData = Omit<PatientInfo, 'ssn'>;
+export type NewPatientEntry = Omit<PatientInfo, 'id'>; 

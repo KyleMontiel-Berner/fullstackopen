@@ -1,8 +1,9 @@
 import data from '../../data/patients.ts';
-import type { safePatientData } from '../types.ts';
+import {v1 as uuid} from 'uuid';
+import type { SafePatientData, PatientInfo, NewPatientEntry } from '../types.ts';
 
 
-const getSensitiveInfo = () : safePatientData[] => {
+const getSensitiveInfo = () : SafePatientData[] => {
     return data.map(({id, name, dateOfBirth, gender, occupation}) =>({
         id,
         name,
@@ -13,4 +14,16 @@ const getSensitiveInfo = () : safePatientData[] => {
     );
 };
 
-export default getSensitiveInfo;
+const addPatientInfo = (entry: NewPatientEntry): PatientInfo => {
+    const newEntry: PatientInfo = {
+        id: uuid(),
+        ...entry
+    };
+    data.push(newEntry);
+    return newEntry;
+};
+
+export default {
+    getSensitiveInfo,
+    addPatientInfo
+};
