@@ -1,8 +1,8 @@
 interface Total {
-  totalExercises: number;
+  total: number;
 }
-const Total = ({ totalExercises }: Total) => {
-  return <p>Number of exercises {totalExercises}</p>;
+const Total = ({ total }: Total) => {
+  return <p>Number of exercises {total}</p>;
 };
 
 export default Total;
